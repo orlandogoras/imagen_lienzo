@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retos Matemáticos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* Variables de diseño y tema personalizable */
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --bg-color: #f8fafc;
+      --card-bg: #ffffff;
+      --text-color: #1e293b;
+      --text-muted: #64748b;
+      --border-color: #e2e8f0;
+      --radius: 12px;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Modo oscuro automático o manual */
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg-color: #0f172a;
+        --card-bg: #1e293b;
+        --text-color: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    [data-theme="dark"] {
+      --bg-color: #0f172a;
+      --card-bg: #1e293b;
+      --text-color: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 16px;
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* Encabezado sin imagen */
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: var(--card-bg);
+      padding: 16px 24px;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 16px;
+      border: 1px solid var(--border-color);
+    }
+
+    .header-title-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--text-color);
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .control-btn, select, input[type="color"] {
+      background: var(--card-bg);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .control-btn:hover {
+      border-color: var(--primary);
+      background-color: rgba(37, 99, 235, 0.05);
+    }
+
+    input[type="color"] {
+      padding: 4px;
+      width: 40px;
+      height: 40px;
+    }
+
+    /* Contenedor principal de la aplicación en Grid (Paneles ajustables) */
+    .app-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      flex: 1;
+      width: 100%;
+      max-width: 1600px;
+      margin: 0 auto;
+      align-items: start;
+    }
+
+    @media (max-width: 1024px) {
+      .app-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background-color: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      border: 1px solid var(--border-color);
+      resize: vertical;
+      overflow: auto;
+      min-height: 450px;
+    }
+
+    .panel-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Panel Izquierdo: Pegar imagen / SVG y visor interactivo */
+    .image-drop-zone {
+      border: 2px dashed var(--border-color);
+      border-radius: var(--radius);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background-color: rgba(0,0,0,0.02);
+      min-height: 280px;
+      cursor: grab;
+    }
+
+    .image-drop-zone:active {
+      cursor: grabbing;
+    }
+
+    .drop-message {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 20px;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    .drop-message svg {
+      width: 48px;
+      height: 48px;
+      fill: currentColor;
+      margin-bottom: 8px;
+    }
+
+    .interactive-image-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-origin: center;
+      user-select: none;
+    }
+
+    .interactive-image-container img,
+    .interactive-image-container svg {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    .image-controls {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .image-controls input[type="range"] {
+      flex: 1;
+      accent-color: var(--primary);
+    }
+
+    .svg-input-container {
+      display: flex;
+      gap: 8px;
+    }
+
+    .svg-input-container textarea {
+      flex: 1;
+      background: var(--bg-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 8px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      resize: none;
+      height: 40px;
+    }
+
+    /* Panel Derecho: Lienzo de dibujo */
+    .canvas-toolbar {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tool-btn {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+      padding: 8px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .tool-btn.active {
+      background-color: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 2px solid var(--border-color);
+      background-color: #ffffff;
+      min-height: 280px;
+      touch-action: none;
+      resize: vertical;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      cursor: crosshair;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: background-color 0.2s;
+      justify-content: center;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    /* Notificación Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background-color: #10b981;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      font-weight: 600;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado Principal (Sin imagen) -->
+  <header>
+    <div class="header-title-container">
+      <h1 id="ui-title">Retos matemáticos</h1>
+    </div>
+    
+    <div class="header-controls">
+      <!-- Selector de Idioma -->
+      <button class="control-btn" id="langToggle">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        <span id="langLabel">EN / ES</span>
+      </button>
+
+      <!-- Selector de Color de Tema -->
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <label for="themeColorPicker" id="ui-theme-label" style="font-size: 0.9rem; font-weight: 600;">Tema:</label>
+        <input type="color" id="themeColorPicker" value="#2563eb" title="Cambiar color principal">
+      </div>
+    </div>
+  </header>
+
+  <!-- Contenedor Principal en Grid -->
+  <div class="app-grid">
+    
+    <!-- Panel Izquierdo: Visor de Imagen / Captura / SVG -->
+    <div class="panel">
+      <div class="panel-title">
+        <span id="ui-left-title">Área de Imagen / Reto</span>
+        <span style="font-size: 0.85rem; color: var(--text-muted);" id="ui-paste-hint">Pega con Ctrl+V</span>
+      </div>
+
+      <div class="image-drop-zone" id="dropZone">
+        <div class="drop-message" id="dropMessage">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+          <p id="ui-drop-text">Pega una captura (Ctrl+V) o arrastra una imagen aquí</p>
+        </div>
+        <div class="interactive-image-container" id="imageContainer" style="display: none;"></div>
+      </div>
+
+      <div class="image-controls">
+        <span style="font-size: 0.9rem; font-weight: 600;" id="ui-zoom-label">Zoom:</span>
+        <input type="range" id="zoomRange" min="0.5" max="3" step="0.1" value="1">
+        <button class="control-btn" id="resetImgBtn">Reset</button>
+      </div>
+
+      <div class="svg-input-container">
+        <textarea id="svgInput" placeholder="O pega código SVG aquí..."></textarea>
+        <button class="control-btn" id="loadSvgBtn" style="height: 40px;" id="ui-load-svg">Cargar SVG</button>
+      </div>
+    </div>
+
+    <!-- Panel Derecho: Lienzo de Dibujo Interactivo -->
+    <div class="panel">
+      <div class="panel-title">
+        <span id="ui-right-title">Lienzo de Respuestas</span>
+      </div>
+
+      <div class="canvas-toolbar">
+        <input type="color" id="inkColor" value="#1e293b" title="Color de Tinta">
+        <input type="range" id="brushSize" min="1" max="25" value="4" style="width: 80px;" title="Grosor">
+
+        <button class="tool-btn active" id="toolPencil" data-tool="pencil">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path></svg>
+          <span id="ui-tool-pencil">Lápiz</span>
+        </button>
+
+        <button class="tool-btn" id="toolLine" data-tool="line">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="19" x2="19" y2="5"></line></svg>
+          <span id="ui-tool-line">Línea</span>
+        </button>
+
+        <button class="tool-btn" id="toolEraser" data-tool="eraser">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><path d="M20 20H7L3 16c-1-1-1-2 0-3l10-10c1-1 2-1 3 0l5 5c1 1 1 2 0 3L13 20z"></path></svg>
+          <span id="ui-tool-eraser">Borrador</span>
+        </button>
+
+        <button class="tool-btn" id="clearCanvasBtn" style="margin-left: auto;">
+          <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+          <span id="ui-tool-clear">Limpiar</span>
+        </button>
+      </div>
+
+      <div class="canvas-container" id="canvasContainer">
+        <canvas id="drawingCanvas"></canvas>
+      </div>
+
+      <button class="btn-primary" id="copyCanvasBtn">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        <span id="ui-copy-btn">Copiar al Portapapeles</span>
+      </button>
+    </div>
+
+  </div>
+
+  <div class="toast" id="toast">¡Imagen copiada al portapapeles!</div>
+
+  <script>
+    const translations = {
+      es: {
+        title: "Retos matemáticos",
+        theme: "Tema:",
+        leftTitle: "Área de Imagen / Reto",
+        pasteHint: "Pega con Ctrl+V",
+        dropText: "Pega una captura (Ctrl+V) o arrastra una imagen aquí",
+        zoom: "Zoom:",
+        loadSvg: "Cargar SVG",
+        rightTitle: "Lienzo de Respuestas",
+        pencil: "Lápiz",
+        line: "Línea",
+        eraser: "Borrador",
+        clear: "Limpiar",
+        copyBtn: "Copiar al Portapapeles",
+        toastCopy: "✓ ¡Imagen copiada al portapapeles!",
+        toastSvgError: "❌ Código SVG inválido"
+      },
+      en: {
+        title: "Math Challenges",
+        theme: "Theme:",
+        leftTitle: "Image / Challenge Area",
+        pasteHint: "Paste with Ctrl+V",
+        dropText: "Paste a screenshot (Ctrl+V) or drag an image here",
+        zoom: "Zoom:",
+        loadSvg: "Load SVG",
+        rightTitle: "Answer Canvas",
+        pencil: "Pencil",
+        line: "Line",
+        eraser: "Eraser",
+        clear: "Clear",
+        copyBtn: "Copy to Clipboard",
+        toastCopy: "✓ Image copied to clipboard!",
+        toastSvgError: "❌ Invalid SVG code"
+      }
+    };
+
+    let currentLang = localStorage.getItem('math_app_lang') || 'es';
+
+    function updateLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('math_app_lang', lang);
+      const t = translations[lang];
+      document.getElementById('ui-title').innerText = t.title;
+      document.getElementById('ui-theme-label').innerText = t.theme;
+      document.getElementById('ui-left-title').innerText = t.leftTitle;
+      document.getElementById('ui-paste-hint').innerText = t.pasteHint;
+      document.getElementById('ui-drop-text').innerText = t.dropText;
+      document.getElementById('ui-zoom-label').innerText = t.zoom;
+      document.getElementById('loadSvgBtn').innerText = t.loadSvg;
+      document.getElementById('ui-right-title').innerText = t.rightTitle;
+      document.getElementById('ui-tool-pencil').innerText = t.pencil;
+      document.getElementById('ui-tool-line').innerText = t.line;
+      document.getElementById('ui-tool-eraser').innerText = t.eraser;
+      document.getElementById('ui-tool-clear').innerText = t.clear;
+      document.getElementById('ui-copy-btn').innerText = t.copyBtn;
+      document.getElementById('toast').innerText = t.toastCopy;
+    }
+
+    document.getElementById('langToggle').addEventListener('click', () => {
+      updateLanguage(currentLang === 'es' ? 'en' : 'es');
+    });
+
+    const themeColorPicker = document.getElementById('themeColorPicker');
+    const savedColor = localStorage.getItem('math_app_primary');
+    if (savedColor) {
+      document.documentElement.style.setProperty('--primary', savedColor);
+      document.documentElement.style.setProperty('--primary-hover', adjustBrightness(savedColor, -20));
+      themeColorPicker.value = savedColor;
+    }
+
+    themeColorPicker.addEventListener('input', (e) => {
+      const color = e.target.value;
+      document.documentElement.style.setProperty('--primary', color);
+      document.documentElement.style.setProperty('--primary-hover', adjustBrightness(color, -20));
+      localStorage.setItem('math_app_primary', color);
+    });
+
+    function adjustBrightness(hex, percent) {
+      let num = parseInt(hex.replace("#",""), 16);
+      let amt = Math.round(2.55 * percent);
+      let R = (num >> 16) + amt;
+      let G = (num >> 8 & 0x00FF) + amt;
+      let B = (num & 0x0000FF) + amt;
+      return "#" + (0x1000000 + (R<255?R<0?0:R:255)*0x10000 + (G<255?G<0?0:G:255)*0x100 + (B<255?B<0?0:B:255)).toString(16).slice(1);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2500);
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    const dropMessage = document.getElementById('dropMessage');
+    const imageContainer = document.getElementById('imageContainer');
+    const zoomRange = document.getElementById('zoomRange');
+    const resetImgBtn = document.getElementById('resetImgBtn');
+    const svgInput = document.getElementById('svgInput');
+    const loadSvgBtn = document.getElementById('loadSvgBtn');
+
+    let scale = 1;
+    let panX = 0;
+    let panY = 0;
+    let isDragging = false;
+    let startX = 0;
+    let startY = 0;
+
+    function updateTransform() {
+      imageContainer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      zoomRange.value = scale;
+    }
+
+    function displayContent(element) {
+      imageContainer.innerHTML = '';
+      imageContainer.appendChild(element);
+      imageContainer.style.display = 'flex';
+      dropMessage.style.display = 'none';
+      scale = 1;
+      panX = 0;
+      panY = 0;
+      updateTransform();
+    }
+
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData.items;
+      for (let item of items) {
+        if (item.type.indexOf('image') === 0) {
+          const blob = item.getAsFile();
+          const reader = new FileReader();
+          reader.onload = (event) => {
+            const img = document.createElement('img');
+            img.src = event.target.result;
+            displayContent(img);
+          };
+          reader.readAsDataURL(blob);
+          e.preventDefault();
+          return;
+        }
+      }
+      const text = e.clipboardData.getData('text');
+      if (text && text.trim().startsWith('<svg')) {
+        loadSvgString(text);
+        e.preventDefault();
+      }
+    });
+
+    loadSvgBtn.addEventListener('click', () => {
+      const val = svgInput.value.trim();
+      if (val.startsWith('<svg')) {
+        loadSvgString(val);
+      } else {
+        showToast(translations[currentLang].toastSvgError);
+      }
+    });
+
+    function loadSvgString(svgString) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgString, 'image/svg+xml');
+        const svgEl = doc.querySelector('svg');
+        if (svgEl) {
+          displayContent(svgEl);
+        } else {
+          showToast(translations[currentLang].toastSvgError);
+        }
+      } catch (err) {
+        showToast(translations[currentLang].toastSvgError);
+      }
+    }
+
+    zoomRange.addEventListener('input', (e) => {
+      scale = parseFloat(e.target.value);
+      updateTransform();
+    });
+
+    resetImgBtn.addEventListener('click', () => {
+      scale = 1;
+      panX = 0;
+      panY = 0;
+      updateTransform();
+    });
+
+    dropZone.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      startX = e.clientX - panX;
+      startY = e.clientY - panY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      panX = e.clientX - startX;
+      panY = e.clientY - startY;
+      updateTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    dropZone.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const zoomFactor = 1.1;
+      if (e.deltaY < 0) {
+        scale = Math.min(scale * zoomFactor, 5);
+      } else {
+        scale = Math.max(scale / zoomFactor, 0.2);
+      }
+      updateTransform();
+    }, { passive: false });
+
+    const canvas = document.getElementById('drawingCanvas');
+    const ctx = canvas.getContext('2d');
+    const canvasContainer = document.getElementById('canvasContainer');
+    const inkColorPicker = document.getElementById('inkColor');
+    const brushSizeInput = document.getElementById('brushSize');
+    const toolButtons = document.querySelectorAll('.tool-btn[data-tool]');
+    const clearCanvasBtn = document.getElementById('clearCanvasBtn');
+    const copyCanvasBtn = document.getElementById('copyCanvasBtn');
+
+    let currentTool = 'pencil';
+    let isDrawing = false;
+    let startDrawX = 0;
+    let startDrawY = 0;
+    let snapshot = null;
+
+    function resizeCanvas() {
+      const rect = canvasContainer.getBoundingClientRect();
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = canvas.width || rect.width;
+      tempCanvas.height = canvas.height || rect.height;
+      const tempCtx = tempCanvas.getContext('2d');
+      tempCtx.drawImage(canvas, 0, 0);
+
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(tempCanvas, 0, 0);
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    window.addEventListener('load', () => {
+      resizeCanvas();
+      updateLanguage(currentLang);
+    });
+
+    toolButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        toolButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTool = btn.getAttribute('data-tool');
+      });
+    });
+
+    function getMousePos(e) {
+      const rect = canvas.getBoundingClientRect();
+      const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+      const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+      return {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const pos = getMousePos(e);
+      startDrawX = pos.x;
+      startDrawY = pos.y;
+
+      ctx.beginPath();
+      ctx.moveTo(startDrawX, startDrawY);
+
+      snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      e.preventDefault();
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const pos = getMousePos(e);
+
+      if (currentTool === 'pencil' || currentTool === 'eraser') {
+        ctx.strokeStyle = currentTool === 'eraser' ? '#ffffff' : inkColorPicker.value;
+        ctx.lineWidth = brushSizeInput.value;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      } else if (currentTool === 'line') {
+        ctx.putImageData(snapshot, 0, 0);
+        ctx.strokeStyle = inkColorPicker.value;
+        ctx.lineWidth = brushSizeInput.value;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.moveTo(startDrawX, startDrawY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      }
+      e.preventDefault();
+    }
+
+    function stopDrawing() {
+      if (!isDrawing) return;
+      isDrawing = false;
+      ctx.closePath();
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseleave', stopDrawing);
+
+    canvas.addEventListener('touchstart', startDrawing);
+    canvas.addEventListener('touchmove', draw);
+    canvas.addEventListener('touchend', stopDrawing);
+
+    clearCanvasBtn.addEventListener('click', () => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+    });
+
+    copyCanvasBtn.addEventListener('click', async () => {
+      try {
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
+          const item = new ClipboardItem({ 'image/png': blob });
+          await navigator.clipboard.write([item]);
+          showToast(translations[currentLang].toastCopy);
+        });
+      } catch (err) {
+        alert('Error al copiar al portapapeles');
+      }
+    });
+  </script>
+</body>
+</html>
